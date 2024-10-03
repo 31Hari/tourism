@@ -67,6 +67,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/gallery', [CombinedController::class, 'adminGalleryIndex'])->name('gallery.index');
     Route::get('/plans/create', [CombinedController::class, 'adminPlansCreate'])->name('plans.create');
     Route::post('/plans', [CombinedController::class, 'adminPlansStore'])->name('plans.store');
+    Route::get('/blogs', [CombinedController::class, 'adminBlogsIndex'])->name('blogs.index');
+    Route::get('/blogs', [CombinedController::class, 'adminBlogsIndex'])->name('blogs.index');
+    Route::get('/blogs/create', [CombinedController::class, 'adminBlogCreate'])->name('blogs.create');
+    Route::post('/blogs', [CombinedController::class, 'adminBlogStore'])->name('blogs.store');
 });
 
 
@@ -84,3 +88,31 @@ Route::post('/admin/categories', [CombinedController::class, 'adminCategoriesSto
     Route::delete('/categories/{category}', [CombinedController::class, 'adminCategoriesDestroy'])->name('categories.destroy');
     Route::get('/category-plan/create', [CombinedController::class, 'create'])->name('category_plan.create');
     Route::post('/category-plan', [CombinedController::class, 'store'])->name('category_plan.store');
+    Route::delete('/category-plan/{id}', [CombinedController::class, 'destroyCategoryPlan'])->name('category_plan.destroy');
+    Route::get('/admin/locations/create', [CombinedController::class, 'adminLocationsCreate'])->name('admin.locations.create');
+Route::post('/admin/locations', [CombinedController::class, 'adminLocationsStore'])->name('admin.locations.store');
+Route::get('/locations/{id}/edit', [CombinedController::class, 'adminLocationsEdit'])->name('locations.edit');
+Route::put('/locations/{id}', [CombinedController::class, 'adminLocationsUpdate'])->name('locations.update');
+Route::delete('/locations/{id}', [CombinedController::class, 'adminLocationsDestroy'])->name('locations.destroy');
+Route::get('/admin/hotels/create', [CombinedController::class, 'adminHotelsCreate'])->name('admin.hotels.create');
+Route::post('/admin/hotels', [CombinedController::class, 'adminHotelsStore'])->name('admin.hotels.store');
+Route::get('/admin/hotels', [CombinedController::class, 'adminHotelsIndex'])->name('admin.hotels.index');
+Route::get('/admin/hotels/{hotel}', [CombinedController::class, 'adminHotelsShow'])->name('admin.hotels.show');
+Route::get('/admin/hotels/{hotel}/edit', [CombinedController::class, 'adminHotelsEdit'])->name('admin.hotels.edit');
+Route::put('/admin/hotels/{hotel}', [CombinedController::class, 'adminHotelsUpdate'])->name('admin.hotels.update');
+Route::delete('/admin/hotels/{hotel}', [CombinedController::class, 'adminHotelsDestroy'])->name('admin.hotels.destroy');
+
+
+Route::get('/tours', [CombinedController::class, 'listTravelPackages'])->name('admin.tour.index');
+    Route::get('/tours/create', [CombinedController::class, 'showCreateTravelPackageForm'])->name('admin.tour.create');
+    Route::post('/tours', [CombinedController::class, 'createTravelPackage'])->name('admin.tour.store');
+    Route::get('/tours/{id}', [CombinedController::class, 'showTravelPackageDetails'])->name('admin.tour.show');
+    Route::get('/tours/{id}/edit', [CombinedController::class, 'showEditTravelPackageForm'])->name('admin.tour.edit');
+    Route::put('/tours/{id}', [CombinedController::class, 'updateTravelPackage'])->name('admin.tour.update');
+    Route::delete('/tours/{id}', [CombinedController::class, 'deleteTravelPackage'])->name('admin.tour.destroy');
+    Route::get('/tours', [CombinedController::class, 'adminToursIndex'])->name('tours.index');
+
+   
+
+
+    

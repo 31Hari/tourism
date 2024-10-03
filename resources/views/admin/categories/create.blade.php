@@ -48,6 +48,29 @@
                     </button>
                 </div>
             </form>
+
+            <!-- Display existing categories -->
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold mb-4">Existing Categories</h3>
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-4 border-b">ID</th>
+                            <th class="py-2 px-4 border-b">Name</th>
+                            <th class="py-2 px-4 border-b">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($categories as $category)
+                        <tr>
+                            <td class="py-2 px-4 border-b">{{ $category->id }}</td>
+                            <td class="py-2 px-4 border-b">{{ $category->name }}</td>
+                            <td class="py-2 px-4 border-b">{{ $category->description }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

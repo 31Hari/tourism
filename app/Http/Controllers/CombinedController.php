@@ -6,12 +6,22 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Plan;
 use App\Models\Category;
+use App\Models\Location;
+use App\Models\Hotel;
+use App\Models\BlogPost;
+use App\Models\RoomType;
+use App\Models\Tour;
+use App\Models\TravelPackage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CombinedController extends Controller
 {
@@ -106,14 +116,13 @@ class CombinedController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-
+    
         $request->session()->invalidate();
-
+    
         $request->session()->regenerateToken();
-
+    
         return redirect()->route('user.login');
     }
-
 
     // Admin Dashboard
     public function adminDashboard()
@@ -255,8 +264,8 @@ class CombinedController extends Controller
        // Categories Management
        public function adminCategoriesIndex()
        {
-           $plans = Plan::all(); // Fetch all plans
-           $categories = Category::with('parent', 'plans')->get(); // Fetch all categories with their parent and associated plans
+           $plans = Plan::all();
+           $categories = Category::with('parent')->get();
            $category_plans = DB::table('category_plan')
                ->join('categories', 'category_plan.category_id', '=', 'categories.id')
                ->join('plans', 'category_plan.plan_id', '=', 'plans.id')
@@ -266,12 +275,21 @@ class CombinedController extends Controller
            return view('admin.categories.index', compact('plans', 'categories', 'category_plans'));
        }
 
+       public function destroyCategoryPlan($id)
+{
+    DB::table('category_plan')->where('id', $id)->delete();
+    return redirect()->route('admin.categories.index')->with('success', 'Category plan removed successfully.');
+}
+
+
    
-       public function adminCategoriesCreate()
-       {
-           $plans = Plan::all(); // Fetch plans for category creation
-           return view('admin.categories.create', compact('plans'));
-       }
+public function adminCategoriesCreate()
+{
+    $plans = Plan::all();
+    $categories = Category::all(); // Fetch all categories
+    return view('admin.categories.create', compact('plans', 'categories'));
+}
+
    
        public function adminCategoriesStore(Request $request)
        {
@@ -343,25 +361,331 @@ class CombinedController extends Controller
        }
 
    
-    public function adminLocationsIndex()
-    {
-        return view('admin.locations.index');
+       public function adminLocationsCreate()
+       {
+           return view('admin.locations.create');
+       }
+
+       public function adminLocationsIndex()
+{
+    $locations = Location::all();
+    return view('admin.locations.index', compact('locations'));
+}
+   
+       public function adminLocationsStore(Request $request)
+       {
+           $validatedData = $request->validate([
+               'name' => 'required|string|max:100',
+               'description' => 'nullable|string',
+               'latitude' => 'nullable|numeric|between:-90,90',
+               'longitude' => 'nullable|numeric|between:-180,180',
+           ]);
+       
+           $location = Location::create($validatedData);
+       
+           return redirect()->route('admin.locations.index')->with('success', 'Location added successfully!');
+       }
+
+       public function adminLocationsEdit($id)
+       {
+           $location = Location::findOrFail($id);
+           return view('admin.locations.edit', compact('location'));
+       }
+       
+       
+
+public function adminLocationsUpdate(Request $request, $id)
+{
+    $location = Location::findOrFail($id);
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:100',
+        'description' => 'nullable|string',
+        'latitude' => 'nullable|numeric|between:-90,90',
+        'longitude' => 'nullable|numeric|between:-180,180',
+    ]);
+
+    $location->update($validatedData);
+
+    return redirect()->route('admin.locations.index')->with('success', 'Location updated successfully!');
+}
+
+public function adminLocationsDestroy($id)
+{
+    $location = Location::findOrFail($id);
+    $location->delete();
+
+    return redirect()->route('admin.locations.index')->with('success', 'Location deleted successfully!');
+}
+
+public function adminHotelsCreate()
+{
+    $locations = Location::all();
+    return view('admin.hotels.create', compact('locations'));
+}
+
+
+public function adminHotelsStore(Request $request)
+{
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:100',
+        'description' => 'nullable|string',
+        'address' => 'nullable|string',
+        'location_id' => 'nullable|exists:locations,id',
+        'amenities' => 'nullable|string',
+        'policies' => 'nullable|string',
+        'image1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'image2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'image3' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'image4' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'room_types' => 'required|array',
+        'room_types.*.name' => 'required|string|max:100',
+        'room_types.*.description' => 'nullable|string',
+        'room_types.*.capacity' => 'required|integer|min:1',
+        'room_types.*.price' => 'required|numeric|min:0',
+    ]);
+
+    $hotel = Hotel::create([
+        'name' => $validatedData['name'],
+        'description' => $validatedData['description'],
+        'address' => $validatedData['address'],
+        'location_id' => $validatedData['location_id'],
+        'amenities' => $validatedData['amenities'],
+        'policies' => $validatedData['policies'],
+    ]);
+
+    // Handle image uploads
+    for ($i = 1; $i <= 4; $i++) {
+        $imageField = "image{$i}";
+        if ($request->hasFile($imageField)) {
+            $imagePath = $request->file($imageField)->store('hotel_images', 'public');
+            $hotel->$imageField = $imagePath;
+        }
     }
 
-    public function adminHotelsIndex()
-    {
-        return view('admin.hotels.index');
+    $hotel->save();
+
+    // Create room types
+    foreach ($validatedData['room_types'] as $roomTypeData) {
+        $hotel->roomTypes()->create($roomTypeData);
     }
 
-    public function adminToursIndex()
-    {
-        return view('admin.tours.index');
+    return redirect()->route('admin.hotels.index')->with('success', 'Hotel created successfully.');
+}
+
+public function adminHotelsIndex()
+{
+    $hotels = Hotel::with('location')->paginate(10); // Adjust the number as needed
+    return view('admin.hotels.index', compact('hotels'));
+}
+
+public function destroy(Hotel $hotel)
+{
+    // Delete associated room types
+    $hotel->roomTypes()->delete();
+
+    // Delete the hotel
+    $hotel->delete();
+
+    return redirect()->route('admin.hotels.index')->with('success', 'Hotel deleted successfully');
+}
+
+public function adminHotelsEdit(Hotel $hotel)
+{
+    $locations = Location::all();
+    return view('admin.hotels.edit', compact('hotel', 'locations'));
+}
+
+public function adminHotelsUpdate(Request $request, Hotel $hotel)
+{
+    $validatedData = $request->validate([
+        'name' => 'required|string|max:100',
+        'description' => 'nullable|string',
+        'address' => 'nullable|string',
+        'location_id' => 'nullable|exists:locations,id',
+        'amenities' => 'nullable|string',
+        'policies' => 'nullable|string',
+        'image1' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'image2' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'image3' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'image4' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'room_types' => 'required|array',
+        'room_types.*.name' => 'required|string|max:100',
+        'room_types.*.description' => 'nullable|string',
+        'room_types.*.capacity' => 'required|integer|min:1',
+        'room_types.*.price' => 'required|numeric|min:0',
+    ]);
+
+    $hotel->update([
+        'name' => $validatedData['name'],
+        'description' => $validatedData['description'],
+        'address' => $validatedData['address'],
+        'location_id' => $validatedData['location_id'],
+        'amenities' => $validatedData['amenities'],
+        'policies' => $validatedData['policies'],
+    ]);
+
+    // Handle image uploads
+    for ($i = 1; $i <= 4; $i++) {
+        $imageField = "image{$i}";
+        if ($request->hasFile($imageField)) {
+            $imagePath = $request->file($imageField)->store('hotel_images', 'public');
+            $hotel->$imageField = $imagePath;
+        }
     }
 
+    $hotel->save();
+
+    // Update room types
+    $hotel->roomTypes()->delete();
+    foreach ($validatedData['room_types'] as $roomTypeData) {
+        $hotel->roomTypes()->create($roomTypeData);
+    }
+
+    return redirect()->route('admin.hotels.index')->with('success', 'Hotel updated successfully.');
+}
+
+public function adminHotelsShow(Hotel $hotel)
+{
+    return view('admin.hotels.show', compact('hotel'));
+}
+
+public function adminToursIndex()
+{
+    $travelPackages = TravelPackage::with(['category', 'plan', 'location', 'hotel'])->paginate(10);
+    $categories = Category::all();
+    $plans = Plan::all();
+    $locations = Location::all();
+    $hotels = Hotel::all();
+
+    return view('admin.tours.index', compact('travelPackages', 'categories', 'plans', 'locations', 'hotels'));
+}
+
+public function showCreateTravelPackageForm()
+{
+    $categories = Category::all();
+    $plans = Plan::all();
+    $locations = Location::all();
+    $hotels = Hotel::all();
+    return view('admin.tour.index', compact('categories', 'plans', 'locations', 'hotels'));
+}
+
+    public function createTravelPackage(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255',
+            'description' => 'nullable',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'category_id' => 'required|exists:categories,id',
+            'plan_id' => 'required|exists:plans,id',
+            'location_id' => 'required|exists:locations,id',
+            'hotel_id' => 'required|exists:hotels,id',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        TravelPackage::create($validator->validated());
+
+        return redirect()->route('admin.tours.index')->with('success', 'Travel package created successfully.');
+    }
+
+    public function listTravelPackages()
+    {
+        $travelPackages = TravelPackage::with(['category', 'plan', 'location', 'hotel'])->paginate(10);
+        return view('admin.tour.index', compact('travelPackages'));
+    }
+
+    public function showTravelPackageDetails($id)
+    {
+        $travelPackage = TravelPackage::with(['category', 'plan', 'location', 'hotel'])->findOrFail($id);
+        return view('admin.tour.show', compact('travelPackage'));
+    }
+    public function getPlansForCategory(Category $category)
+{
+    $plans = $category->plans;
+    return response()->json($plans);
+}
+
+    public function showEditTravelPackageForm($id)
+    {
+        $travelPackage = TravelPackage::findOrFail($id);
+        $categories = Category::all();
+        $plans = Plan::all();
+        $locations = Location::all();
+        $hotels = Hotel::all();
+        return view('admin.tour.edit', compact('travelPackage', 'categories', 'plans', 'locations', 'hotels'));
+    }
+
+    public function updateTravelPackage(Request $request, $id)
+    {
+        $travelPackage = TravelPackage::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|max:255',
+            'description' => 'nullable',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'category_id' => 'required|exists:categories,id',
+            'plan_id' => 'required|exists:plans,id',
+            'location_id' => 'required|exists:locations,id',
+            'hotel_id' => 'required|exists:hotels,id',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $travelPackage->update($validator->validated());
+
+        return redirect()->route('admin.tour.index')->with('success', 'Travel package updated successfully.');
+    }
+
+    public function deleteTravelPackage($id)
+    {
+        $travelPackage = TravelPackage::findOrFail($id);
+        $travelPackage->delete();
+        return redirect()->route('admin.tour.index')->with('success', 'Travel package deleted successfully.');
+    }
     public function adminBlogsIndex()
     {
-        return view('admin.blogs.index');
+        // Fetch blog posts with their related author and category
+        $blogPosts = BlogPost::with('author', 'category')->get();
+        
+        return view('admin.blogs.index', compact('blogPosts'));
     }
+    
+    public function adminBlogCreate()
+    {
+        $travelPackages = TravelPackage::all();
+        $categories = Category::all();
+        return view('admin.blogs.create', compact('travelPackages', 'categories'));
+    }
+    
+    public function adminBlogStore(Request $request)
+{
+    $validatedData = $request->validate([
+        'title' => 'required|string|max:255',
+        'content' => 'required|string',
+        'category_id' => 'required|exists:categories,id',
+        'travel_package_id' => 'required|exists:travel_packages,id',
+        'status' => 'required|in:draft,published',
+        'publish_date' => 'nullable|date',
+    ]);
+
+    $blogPost = new BlogPost($validatedData);
+    $blogPost->author_id = Auth::id();
+    $blogPost->save();
+
+    return redirect()->route('admin.blogs.index')->with('success', 'Blog post created successfully.');
+}
 
     public function adminUsersIndex()
     {
@@ -485,6 +809,7 @@ class CombinedController extends Controller
             return redirect()->back()->with('error', 'Error creating plan. Please try again.')->withInput();
         }
     }
+
 
 
 }
