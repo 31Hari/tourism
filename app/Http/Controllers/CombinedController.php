@@ -9,8 +9,14 @@ use App\Models\Category;
 use App\Models\Location;
 use App\Models\Hotel;
 use App\Models\BlogPost;
+use App\Models\AuditLog;
+use App\Models\UserAuthLog;
+use App\Models\UserActivityLog;
+use App\Models\AdminActivityLog;
 use App\Models\RoomType;
 use App\Models\Tour;
+use App\Models\Media;
+use App\Models\MediaFile;
 use App\Models\TravelPackage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -80,36 +86,42 @@ class CombinedController extends Controller
     }
 
     public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'username' => ['required', 'string'],
-            'password' => ['required', 'string'],
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'username' => ['required', 'string'],
+        'password' => ['required', 'string'],
+    ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        $credentials = $request->only('username', 'password');
-
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-
-            // Check if the authenticated user is an admin
-            if (Auth::user()->role === 'admin') {
-                return redirect()->route('admin.dashboard');
-            }
-
-            // If not an admin, redirect to user dashboard
-            return redirect()->route('user.dashboard');
-        }
-
-        return back()->withErrors([
-            'username' => 'The provided credentials do not match our records.',
-        ])->onlyInput('username');
+    if ($validator->fails()) {
+        return redirect()->back()
+            ->withErrors($validator)
+            ->withInput();
     }
+
+    $credentials = $request->only('username', 'password');
+
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
+
+        $user = Auth::user();
+        $this->createUserAuthLog($user->id, 'login');
+
+        if ($user->role === 'admin') {
+            $this->createAdminActivityLog($user->id, 'login', 'Admin logged in');
+            return redirect()->route('admin.dashboard');
+        }
+
+        $this->createUserActivityLog($user->id, 'login', 'User logged in');
+        return redirect()->route('user.dashboard');
+    }
+
+    $this->createAuditLog(null, 'failed_login', 'Failed login attempt for username: ' . $request->username);
+
+    return back()->withErrors([
+        'username' => 'The provided credentials do not match our records.',
+    ])->onlyInput('username');
+}
+
 
 
 
@@ -124,14 +136,127 @@ class CombinedController extends Controller
         return redirect()->route('user.login');
     }
 
-    // Admin Dashboard
-    public function adminDashboard()
+    public function adminAuditLogsIndex()
     {
-        return view('admin.dashboard.index');
+        $auditLogs = AuditLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
+        return view('admin.logs.audit_logs', compact('auditLogs'));
+    }
+
+    public function adminUserAuthLogsIndex()
+    {
+        $userAuthLogs = UserAuthLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
+        return view('admin.logs.user_auth_logs', compact('userAuthLogs'));
+    }
+
+    public function adminUserActivityLogsIndex()
+    {
+        $userActivityLogs = UserActivityLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
+        return view('admin.logs.user_activity_logs', compact('userActivityLogs'));
+    }
+
+    public function adminActivityLogsIndex()
+    {
+        $adminActivityLogs = AdminActivityLog::with('admin')->orderBy('created_at', 'desc')->paginate(20);
+        return view('admin.logs.admin_activity_logs', compact('adminActivityLogs'));
+    }
+
+    // Helper function to create an audit log
+    private function createAuditLog($userId, $action, $details)
+    {
+        AuditLog::create([
+            'user_id' => $userId,
+            'action' => $action,
+            'details' => $details,
+            'ip_address' => request()->ip(),
+            'created_at' => now(),
+        ]);
+    }
+
+    // Helper function to create a user auth log
+    private function createUserAuthLog($userId, $action)
+    {
+        UserAuthLog::create([
+            'user_id' => $userId,
+            'action' => $action,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'created_at' => now(),
+        ]);
+    }
+
+    // Helper function to create a user activity log
+    private function createUserActivityLog($userId, $action, $details)
+    {
+        UserActivityLog::create([
+            'user_id' => $userId,
+            'action' => $action,
+            'details' => $details,
+            'ip_address' => request()->ip(),
+            'created_at' => now(),
+        ]);
+    }
+
+    // Helper function to create an admin activity log
+    private function createAdminActivityLog($adminId, $action, $details)
+    {
+        AdminActivityLog::create([
+            'admin_id' => $adminId,
+            'action' => $action,
+            'details' => $details,
+            'ip_address' => request()->ip(),
+            'created_at' => now(),
+        ]);
+    }
+    public function adminLogsIndex()
+    {
+        $auditLogs = AuditLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
+        $userAuthLogs = UserAuthLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
+        $userActivityLogs = UserActivityLog::with('user')->orderBy('created_at', 'desc')->paginate(20);
+        $adminActivityLogs = AdminActivityLog::with('admin')->orderBy('created_at', 'desc')->paginate(20);
+    
+        return view('admin.logs.index', compact('auditLogs', 'userAuthLogs', 'userActivityLogs', 'adminActivityLogs'));
     }
 
 
+    public function adminDashboard()
+{
+    $totalUsers = User::count();
+    $activePlans = Plan::where('is_active', true)->count();
+    $totalHotels = Hotel::count();
+    $activeTours = Tour::count();
 
+    $userRegistrationData = User::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+        ->groupBy('date')
+        ->orderBy('date')
+        ->get();
+
+    $recentActivities = UserActivityLog::with('user')
+        ->orderBy('created_at', 'desc')
+        ->take(5)
+        ->get();
+
+    $latestBlogPosts = BlogPost::orderBy('created_at', 'desc')
+        ->take(5)
+        ->get();
+
+    // Fetch recent user registrations with details
+    $recentUsers = User::orderBy('created_at', 'desc')
+        ->take(10)
+        ->get();
+
+    return view('admin.dashboard.index', compact(
+        'totalUsers',
+        'activePlans',
+        'totalHotels',
+        'activeTours',
+        'userRegistrationData',
+        'recentActivities',
+        'latestBlogPosts',
+        'recentUsers'
+    ));
+}
+
+    
     public function userDashboard()
     {
         return view('user.dashboard.index');
@@ -219,12 +344,59 @@ class CombinedController extends Controller
         return view('user.travel_planner.edit', compact('id'));
     }
 
-    // Gallery
-    public function galleryIndex()
+
+    public function galleryStore(Request $request)
     {
-        return view('user.gallery.index');
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'type' => 'required|in:image,video,document',
+            'travel_package_id' => 'nullable|exists:travel_packages,id',
+            'files' => 'required|array',
+            'files.*' => 'file|max:10240', // 10MB max file size
+        ]);
+    
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'You must be logged in to upload media.');
+        }
+    
+        $user = Auth::user();
+    
+        $media = Media::create([
+            'title' => $request->title,
+            'description' => $request->description,
+            'type' => $request->type,
+            'uploaded_by' => $user->id,
+            'travel_package_id' => $request->travel_package_id,
+        ]);
+    
+        foreach ($request->file('files') as $file) {
+            $path = $file->store('media_files', 'public');
+            MediaFile::create([
+                'media_id' => $media->id,
+                'file_name' => $file->getClientOriginalName(),
+                'file_path' => $path,
+            ]);
+        }
+    
+        return redirect()->route('admin.gallery.index')->with('success', 'Media uploaded successfully!');
     }
 
+    public function galleryIndex()
+    {
+        // Fetch gallery items
+        $galleryItems = Media::with('mediaFiles')->get();
+        return view('admin.gallery.index', compact('galleryItems'));
+    }
+    
+
+
+
+public function createGallery()
+{
+    $travelPackages = TravelPackage::all();
+    return view('admin.gallery.create', compact('travelPackages'));
+}
     // Wishlist
     public function wishlistIndex()
     {
@@ -687,10 +859,32 @@ public function showCreateTravelPackageForm()
     return redirect()->route('admin.blogs.index')->with('success', 'Blog post created successfully.');
 }
 
-    public function adminUsersIndex()
-    {
-        return view('admin.users.index');
+public function adminUsersIndex()
+{
+    $users = User::where('role', 'user')->get();
+    return view('admin.users.index', compact('users'));
+}
+
+public function adminUsersDestroy($id)
+{
+    try {
+        $user = User::findOrFail($id);
+
+        // Check if the user is not trying to delete themselves
+        if (Auth::id() == $user->id) {
+            return redirect()->route('admin.users.index')->with('error', 'You cannot delete your own account.');
+        }
+
+        // Perform any necessary cleanup (e.g., deleting related records)
+        // This depends on your application's structure and requirements
+
+        $user->delete();
+
+        return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
+    } catch (\Exception $e) {
+        return redirect()->route('admin.users.index')->with('error', 'Error deleting user: ' . $e->getMessage());
     }
+}
 
     public function adminPaymentsIndex()
     {
@@ -707,10 +901,7 @@ public function showCreateTravelPackageForm()
         return view('admin.reports.index');
     }
 
-    public function adminAuditLogsIndex()
-    {
-        return view('admin.audit_logs.index');
-    }
+
 
     public function adminGalleryIndex()
     {

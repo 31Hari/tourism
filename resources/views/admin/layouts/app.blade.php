@@ -213,7 +213,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="{{ route('admin.audit_logs.index') }}">
+                <a class="nav-link" href="{{ route('admin.logs.index') }}">
                     <i class="fas fa-fw fa-history"></i>
                     <span>Audit Logs</span>
                 </a>

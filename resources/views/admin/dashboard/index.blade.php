@@ -1,80 +1,151 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Admin Dashboard')
-
 @section('content')
-<div class="container mx-auto px-4">
-    <h1 class="text-3xl font-semibold mb-6">Dashboard</h1>
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Dashboard</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Cards Row -->
+    <div class="row">
         <!-- Users Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Total Users</h2>
-            <p class="text-3xl font-bold text-blue-600">1,234</p>
-            <p class="text-sm text-gray-500 mt-2">+5% from last month</p>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Users</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalUsers }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Bookings Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Total Bookings</h2>
-            <p class="text-3xl font-bold text-green-600">567</p>
-            <p class="text-sm text-gray-500 mt-2">+12% from last month</p>
-        </div>
-
-        <!-- Revenue Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Total Revenue</h2>
-            <p class="text-3xl font-bold text-purple-600">$98,765</p>
-            <p class="text-sm text-gray-500 mt-2">+8% from last month</p>
+        <!-- Plans Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Active Plans</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $activePlans }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Hotels Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Total Hotels</h2>
-            <p class="text-3xl font-bold text-yellow-600">89</p>
-            <p class="text-sm text-gray-500 mt-2">+2 new this month</p>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Hotels</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalHotels }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hotel fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tours Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Total Tours</h2>
-            <p class="text-3xl font-bold text-red-600">45</p>
-            <p class="text-sm text-gray-500 mt-2">+3 new this month</p>
-        </div>
-
-        <!-- Support Tickets Card -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Open Support Tickets</h2>
-            <p class="text-3xl font-bold text-indigo-600">23</p>
-            <p class="text-sm text-gray-500 mt-2">-15% from last month</p>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Active Tours</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $activeTours }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-map-marked-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="mt-8">
-        <h2 class="text-2xl font-semibold mb-4">Recent Activities</h2>
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <ul class="space-y-4">
-                <li class="flex items-center">
-                    <span class="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                    <span>New user registered: John Doe</span>
-                    <span class="ml-auto text-sm text-gray-500">2 hours ago</span>
-                </li>
-                <li class="flex items-center">
-                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    <span>New booking: Luxury Suite at Sunset Hotel</span>
-                    <span class="ml-auto text-sm text-gray-500">5 hours ago</span>
-                </li>
-                <li class="flex items-center">
-                    <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
-                    <span>New review: 5 stars for Mountain Trek Tour</span>
-                    <span class="ml-auto text-sm text-gray-500">1 day ago</span>
-                </li>
-                <li class="flex items-center">
-                    <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                    <span>Support ticket resolved: Payment issue</span>
-                    <span class="ml-auto text-sm text-gray-500">2 days ago</span>
-                </li>
-            </ul>
+    <!-- Analytics Row -->
+    <div class="row">
+        <!-- User Registration Chart -->
+        <div class="col-xl-8 col-lg-7">
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <h6 class="m-0 font-weight-bold text-primary mt-4">Recent User Registrations</h6>
+            <div class="table-responsive mt-3">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>Email</th>
+                            <th>Registered On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentUsers as $user)
+                        <tr>
+                            <td>{{ $user->username }}</td>
+                            <td>{{ $user->email }}</td>
+                            <td>{{ $user->created_at->format('Y-m-d H:i') }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+        <!-- Payment Distribution -->
+    </div>
+
+    <!-- Notification Area -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Recent Activities</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        @foreach($recentActivities as $activity)
+                            <li class="list-group-item">
+                                <strong>{{ $activity->user->name }}</strong> {{ $activity->action }}
+                                <small class="float-right text-muted">{{ $activity->created_at->diffForHumans() }}</small>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Latest Blog Posts</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        @foreach($latestBlogPosts as $post)
+                            <li class="list-group-item">
+                                <a href="{{ route('admin.dashboard', $post->id) }}">{{ $post->title }}</a>
+                                <small class="float-right text-muted">{{ $post->created_at->format('M d, Y') }}</small>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>

@@ -40,7 +40,7 @@ Route::get('/travel-planner', [CombinedController::class, 'travelPlannerIndex'])
 Route::get('/travel-planner/create', [CombinedController::class, 'travelPlannerCreate'])->name('user.travel_planner.create');
 Route::get('/travel-planner/{id}/edit', [CombinedController::class, 'travelPlannerEdit'])->name('user.travel_planner.edit');
 
-Route::get('/gallery', [CombinedController::class, 'galleryIndex'])->name('user.gallery.index');
+
 Route::get('/wishlist', [CombinedController::class, 'wishlistIndex'])->name('user.wishlist.index');
 
 Route::get('/support', [CombinedController::class, 'supportIndex'])->name('user.support.index');
@@ -64,7 +64,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/settings/general', [CombinedController::class, 'adminSettingsGeneral'])->name('settings.general');
     Route::get('/reports', [CombinedController::class, 'adminReportsIndex'])->name('reports.index');
     Route::get('/audit-logs', [CombinedController::class, 'adminAuditLogsIndex'])->name('audit_logs.index');
-    Route::get('/gallery', [CombinedController::class, 'adminGalleryIndex'])->name('gallery.index');
     Route::get('/plans/create', [CombinedController::class, 'adminPlansCreate'])->name('plans.create');
     Route::post('/plans', [CombinedController::class, 'adminPlansStore'])->name('plans.store');
     Route::get('/blogs', [CombinedController::class, 'adminBlogsIndex'])->name('blogs.index');
@@ -112,7 +111,24 @@ Route::get('/tours', [CombinedController::class, 'listTravelPackages'])->name('a
     Route::delete('/tours/{id}', [CombinedController::class, 'deleteTravelPackage'])->name('admin.tour.destroy');
     Route::get('/tours', [CombinedController::class, 'adminToursIndex'])->name('tours.index');
 
-   
+    Route::delete('/admin/users/{id}', [CombinedController::class, 'adminUsersDestroy'])->name('admin.users.destroy');
+    Route::get('/admin/users', [CombinedController::class, 'adminUsersIndex'])->name('admin.users.index');
+
+
+    Route::get('/audit-logs', [CombinedController::class, 'adminAuditLogsIndex'])->name('audit_logs.index');
+    Route::get('/user-auth-logs', [CombinedController::class, 'adminUserAuthLogsIndex'])->name('user_auth_logs.index');
+    Route::get('/user-activity-logs', [CombinedController::class, 'adminUserActivityLogsIndex'])->name('user_activity_logs.index');
+    Route::get('/admin-activity-logs', [CombinedController::class, 'adminActivityLogsIndex'])->name('admin_activity_logs.index');
+
+    Route::get('/admin/logs', [CombinedController::class, 'adminLogsIndex'])->name('admin.logs.index');
+
+
+Route::post('/admin/gallery', [CombinedController::class, 'galleryStore'])->name('admin.gallery.store');
+Route::get('/admin/gallery', [CombinedController::class, 'galleryIndex'])->name('admin.gallery.index');
+Route::get('/admin/gallery/create', [CombinedController::class, 'createGallery'])->name('admin.gallery.create');
+Route::get('/admin/gallery/{id}/edit', [CombinedController::class, 'galleryEdit'])->name('admin.gallery.edit');
+Route::delete('/admin/gallery/{id}', [CombinedController::class, 'galleryDestroy'])->name('admin.gallery.destroy');
+Route::get('/gallery', [CombinedController::class, 'galleryIndex'])->name('user.gallery.index');
 
 
     
