@@ -89,6 +89,9 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                        <a class="nav-link" href="{{ route('user.home') }}"><i class="fas fa-home mr-1"></i>{{ __('Home') }}</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('user.dashboard') }}"><i class="fas fa-tachometer-alt mr-1"></i>{{ __('Dashboard') }}</a>
                     </li>
@@ -134,7 +137,7 @@
     </main>
 
     <footer class="footer text-center text-lg-start">
-        <div class="container p-4">
+        <div class="container p-4 ">
             <p>&copy; {{ date('Y') }} {{ config('app.name', 'Tourism') }}. All rights reserved.</p>
         </div>
     </footer>

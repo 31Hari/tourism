@@ -51,6 +51,7 @@ class TravelPackage extends Model
     {
         return $this->belongsTo(Hotel::class);
     }
+    
 
     // Accessor for duration
     public function getDurationAttribute()

@@ -18,6 +18,7 @@ Route::get('/admin/dashboard', [CombinedController::class, 'adminDashboard'])->n
 Route::get('/user/dashboard', [CombinedController::class, 'userDashboard'])->name('user.dashboard');
 
 
+Route::get('/home', [CombinedController::class, 'home'])->name('user.home');
 // Additional routes for other functionalities
 Route::get('/bookings', [CombinedController::class, 'bookingsIndex'])->name('user.bookings.index');
 Route::get('/bookings/create', [CombinedController::class, 'bookingsCreate'])->name('user.bookings.create');
@@ -130,5 +131,17 @@ Route::get('/admin/gallery/{id}/edit', [CombinedController::class, 'galleryEdit'
 Route::delete('/admin/gallery/{id}', [CombinedController::class, 'galleryDestroy'])->name('admin.gallery.destroy');
 Route::get('/gallery', [CombinedController::class, 'galleryIndex'])->name('user.gallery.index');
 
+
+// User routes
+Route::post('/bookings', [CombinedController::class, 'bookingsStore'])->name('user.bookings.store');
+Route::post('/reviews', [CombinedController::class, 'reviewsStore'])->name('user.reviews.store');
+Route::put('/reviews/{id}', [CombinedController::class, 'reviewsUpdate'])->name('user.reviews.update');
+Route::delete('/reviews/{id}', [CombinedController::class, 'reviewsDestroy'])->name('user.reviews.destroy');
+Route::put('/profile', [CombinedController::class, 'profileUpdate'])->name('user.profile.update');
+Route::post('/travel-planner', [CombinedController::class, 'travelPlannerStore'])->name('user.travel_planner.store');
+Route::put('/travel-planner/{id}', [CombinedController::class, 'travelPlannerUpdate'])->name('user.travel_planner.update');
+Route::delete('/travel-planner/{id}', [CombinedController::class, 'travelPlannerDestroy'])->name('user.travel_planner.destroy');
+Route::post('/support', [CombinedController::class, 'supportStore'])->name('user.support.store');
+Route::get('/tours/{id}', [CombinedController::class, 'toursShow'])->name('user.tours.show');
 
     

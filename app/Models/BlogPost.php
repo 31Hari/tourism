@@ -37,4 +37,9 @@ class BlogPost extends Model
     {
         return $this->belongsTo(TravelPackage::class);
     }
+
+// public function travel_package()
+// {
+//     return $this->belongsTo(TravelPackage::class);
+// }
 }

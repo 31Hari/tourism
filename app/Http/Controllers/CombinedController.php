@@ -262,6 +262,21 @@ class CombinedController extends Controller
         return view('user.dashboard.index');
     }
 
+    public function home()
+{
+    $featuredDestinations = TravelPackage::with(['category', 'location', 'hotel'])
+        ->where('status', 'active')
+        ->take(3)
+        ->get();
+
+    $latestBlogPosts = BlogPost::with(['author', 'travelpackage'])
+        ->where('status', 'published')
+        ->orderBy('publish_date', 'desc')
+        ->take(3)
+        ->get();
+
+    return view('user.home', compact('featuredDestinations', 'latestBlogPosts'));
+}
 
     // Bookings
     public function bookingsIndex()
